@@ -76,7 +76,7 @@ function getCrossingNumber(point, lines) {
     return count;
 }
 // 将数组arrlast插入数组arrfirst中，index是想要插入的位置
-function insert(arrfirst, arrlast, index) {    
+function insert(arrfirst, arrlast, index) {
     if (index < 0) {
         index = 0;
     } else if (index > arrfirst.length) {
@@ -144,7 +144,12 @@ function newPoints(sa) {
     })
     return newArr
 }
-
+// 阻止默认事件
+function preventPropagation(evt) {
+    evt.stopImmediatePropagation();
+    evt.stopPropagation();
+    evt.preventDefault();
+} 
 const initFreehandRoiTool = (props) => {
     let pathArrX = [];
     let pathArrY = [];
@@ -327,7 +332,7 @@ const initFreehandRoiTool = (props) => {
 
             clearTimeout(ss)
         }, 100)
-        // 暂时注释---会有优化
+        
         if (evt && toolState.data.filter((item) => item.color !== undefined).length === 0) {
             props.dispatch({
                 type: "publicInfo/setShowMarkInforEdite",
@@ -379,35 +384,6 @@ const initFreehandRoiTool = (props) => {
 
         cornerstone.updateImage(element);
     }
-    // cornerstoneTools.FreehandRoiTool.prototype._drawingMouseDownCallback = function (evt) {
-    //     var eventData = evt.detail;
-    //     var buttons = eventData.buttons,
-    //         currentPoints = eventData.currentPoints,
-    //         element = eventData.element;
-
-    //     if (!this.options.mouseButtonMask.includes(buttons)) {
-    //         return;
-    //     };
-    //     // var freehandIntersect = cornerstoneTools.import('util/freehand/index.js')
-    //     var coords = currentPoints.canvas;
-    //     var config = this.configuration;
-    //     var currentTool = config.currentTool;
-    //     var toolState = cornerstoneTools.getToolState(element, this.name);
-    //     var data = toolState.data[currentTool];
-    //     var handleNearby = this._pointNearHandle(element, data, coords);
-    //     if (!freehandIntersect.default.end(data.handles.points) && data.canComplete) {
-    //         var lastHandlePlaced = config.currentHandle;
-
-    //         this._endDrawing(element, lastHandlePlaced, evt);
-    //     } else if (handleNearby === undefined) {
-    //         this._addPoint(eventData);
-    //     }
-
-    //     evt.stopImmediatePropagation();
-    //     evt.stopPropagation();
-    //     evt.preventDefault();
-    //     return;
-    // }
 
     cornerstoneTools.FreehandRoiTool.prototype.handleSelectedCallback = function (evt, toolData, handle) {
         var interactionType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'mouse';
@@ -415,7 +391,6 @@ const initFreehandRoiTool = (props) => {
         var toolState = cornerstoneTools.getToolState(element, this.name);
         toolState.data.map((item) => {
             if (item.uuid === toolData.uuid) {
-                // toolData.color = toolData.color === undefined ? '#ff00ff' : undefined;
                 toolData.color = '#375cb7'
             } else {
                 item.color = undefined
@@ -451,14 +426,7 @@ const initFreehandRoiTool = (props) => {
 
         this._activateModify(element); // Interupt eventDispatchers
 
-        // toolData.active = true
-        // window.cornerstoneToolsHelp.toolColors.setActiveColor('#00ffff')
-        // preventPropagation(evt);
-
-
-        evt.stopImmediatePropagation();
-        evt.stopPropagation();
-        evt.preventDefault();
+        preventPropagation(evt)
     }
 
     cornerstoneTools.FreehandRoiTool.prototype.completeDrawing = function (element, evt) {
@@ -477,6 +445,12 @@ const initFreehandRoiTool = (props) => {
             this._endDrawing(element, lastHandlePlaced, evt);
         }
     }
+    cornerstoneTools.FreehandRoiTool.prototype._drawingMouseDoubleClickCallback = function (evt) {
+        var element = evt.detail.element;
+        this.completeDrawing(element, evt);
+        preventPropagation(evt)
+    }
+
 
     cornerstoneTools.FreehandRoiTool.prototype._drawingMouseUpCallback = function (evt) {
         var element = evt.detail.element;
@@ -495,9 +469,7 @@ const initFreehandRoiTool = (props) => {
             this._endDrawing(element, lastHandlePlaced, evt);
         }
 
-        evt.stopImmediatePropagation();
-        evt.stopPropagation();
-        evt.preventDefault();
+        preventPropagation(evt)
         return;
     }
 
@@ -1119,8 +1091,6 @@ const initFreehandRoiTool = (props) => {
                 sessionStorage.setItem('movePatternModel', true)
             }
         }
-        // e.preventDefault();
-        // return false;
     }
     // document.onmousedown = function(e){
     //     console.log(e,"dddd")
