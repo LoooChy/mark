@@ -4,6 +4,7 @@ import * as freehandIntersect from '../freehandIntersect.js';
 import { message } from 'antd';
 import markText from '../textBoxText.js';
 
+// 判断画图顺逆时针
 function isCoordShun2(c_str) {
     var coords = c_str;
     if (coords.length < 3) {
@@ -45,6 +46,7 @@ function isCoordShun2(c_str) {
     var s = ((x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3));
     return s < 0;
 }
+// 判断点是否在图形内部，奇数在内部偶数在外部
 function getCrossingNumber(point, lines) {
     let count = 0;
     for (let i = 0; i < lines.length; i += 1) {
@@ -73,7 +75,8 @@ function getCrossingNumber(point, lines) {
 
     return count;
 }
-function insert(arrfirst, arrlast, index) {    //将数组arrlast插入数组arrfirst中，index是想要插入的位置
+// 将数组arrlast插入数组arrfirst中，index是想要插入的位置
+function insert(arrfirst, arrlast, index) {    
     if (index < 0) {
         index = 0;
     } else if (index > arrfirst.length) {
@@ -91,6 +94,7 @@ function insert(arrfirst, arrlast, index) {    //将数组arrlast插入数组arr
     }
     return arr;
 }
+// 计算点的截断信息
 function calcPoints(subData, dataFirstJDNum, callback) {
     let arrall1 = JSON.parse(JSON.stringify(subData));
     let arrall2 = JSON.parse(JSON.stringify(subData));
@@ -98,261 +102,48 @@ function calcPoints(subData, dataFirstJDNum, callback) {
     let arr2 = arrall2.splice(-(arrall2.length - dataFirstJDNum));
     callback && callback(arr1, arr2)
 }
-
-function asdf() {
-    function MouseGesture(opt) {
-        opt = opt || {};
-        if (opt.wise) {
-            //是否 获取顺时针角度,默认为逆时针角度
-            this._getDeg = this._clockWise;
-        } else {
-            this._getDeg = this._antiClockWise;
-        }
-        this.distance = opt.distance || 4; //最小有效距离
-        this.vaildOffsetDeg = opt.vaildOffsetDeg || 80; //有效的差值角度，大于这个值，相当于拖拽无效
-
-        this.startPoint = null; //开始的点
-        this.options = {}; //其他参数  偏移角度 offsetDeg  ， 偏移比例 offsetRate
-
-        this.cache = null; //缓存的数据
-    }
-
-
-    MouseGesture.prototype._clockWise = function (start, end) {
-        //获取顺时针的角度
-        return 360 - this._antiClockWise(start, end);
-    }
-
-    MouseGesture.prototype._antiClockWise = function (start, end) {
-        //获取逆时针的旋转角度
-        var x1 = start.x;
-        var y1 = start.y;
-        var x2 = end.x;
-        var y2 = end.y;
-        var deg = 0;
-        if (x1 != x2) {
-            var k = (y1 - y2) / (x1 - x2);
-            var a = Math.atan(k);
-            deg = a * 180 / Math.PI - 90;   //弧度转角度
-            deg = Math.abs(deg);
-            if (x1 >= x2) {
-                deg = deg + 180;
-            }
-        } else {
-            if (y2 > y1) {
-                deg = 0;
-            } else {
-                deg = 180;
-            }
-        }
-        return Math.floor(deg);
-    }
-
-
-    MouseGesture.prototype.transformDeg = function (deg) {
-        if (deg >= 360) {
-            deg = deg - 360;
-        }
-        if (deg < 0) {
-            deg = 360 + deg;
-        }
-        return deg
-    }
-
-    /**
-     * 计算可用的角度
-     * @private
-     */
-    MouseGesture.prototype._invalidDeg = function (deg, offsetDeg) {
-        var $this = this;
-
-        var vaildOffsetDeg = $this.vaildOffsetDeg || 80;
-
-        var start = $this.transformDeg(offsetDeg - vaildOffsetDeg);
-        var end = $this.transformDeg(offsetDeg + vaildOffsetDeg);
-
-        if (start >= 360 - 2 * vaildOffsetDeg) {
-            if (deg <= end) {
-                if (offsetDeg <= end) {
-                    return deg - offsetDeg;
-                } else {
-                    return deg - (360 - offsetDeg);
-                }
-            }
-            if (deg >= start) {
-                if (offsetDeg > start) {
-                    return deg - offsetDeg;
-                } else {
-                    return (360 - deg) + offsetDeg;
-                }
-            }
-        } else {
-            if (deg <= end && deg >= start) {
-                return offsetDeg - deg;
-            }
-        }
-        return false;
-    }
-
-
-
-    /**
-     * 对外的api，设置起始点
-     * @param start
-     * @param options
-     */
-    MouseGesture.prototype.setStart = function (start, options, cache) {
-        options = options || {};
-        this.startPoint = start; //开始的点
-        this.options = options; //其他参数,偏移角度 offsetDeg  ， 偏移比例 offsetRate
-
-        this.distance = options.distance || 4; //最小有效距离
-        this.vaildOffsetDeg = options.vaildOffsetDeg || 80; //有效的差值角度
-
-
-        this.cache = cache || null;
-    }
-
-    /**
-     * 结束之后，清空设置
-     */
-    MouseGesture.prototype.setEnd = function (opt) {
-        opt = opt || {};
-        this.distance = opt.distance || 4; //最小有效距离
-        this.vaildOffsetDeg = opt.vaildOffsetDeg || 80; //有效的差值角度，大于这个值，相当于拖拽无效
-
-        this.startPoint = null; //开始的点
-        this.options = {}; //其他参数
-        this.cache = null;
-    }
-
-    /**
-     * 获取角度相关信息
-     * @param end
-     */
-    MouseGesture.prototype.getDegInfo = function (end) {
-        if (this.startPoint && end) {
-            var obj = {};
-            var start = {
-                x: this.startPoint.x,
-                y: this.startPoint.y
-            }
-            var dis = Math.sqrt((start.x - end.x) * (start.x - end.x) + (start.y - end.y) * (start.y - end.y));
-
-            obj["distance"] = dis;
-            if (dis >= this.distance) {
-                var deg = this._getDeg(start, end);
-                obj["deg"] = this.transformDeg(deg);
-                obj["missX"] = end.x - start.x;
-                obj["missY"] = end.y - start.y;
-                return obj;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     *  计算偏移量
-     */
-    MouseGesture.prototype.calcOffset = function (end) {
-        var $this = this;
-        var obj = $this.getDegInfo(end);
-        if (obj) {
-            var offsetDeg = $this.options.offsetDeg || 0;
-            offsetDeg = $this.transformDeg(offsetDeg);
-            var missDeg1 = $this._invalidDeg(obj.deg, offsetDeg); //偏移角度,正面
-            var missDeg2 = $this._invalidDeg($this.transformDeg(obj.deg + 180), offsetDeg); //偏移角度，反面
-            var missDeg = false;
-            var digital = 1;
-            if (missDeg2 !== false) {
-                missDeg = missDeg2;
-                digital = -1;
-            }
-
-            if (missDeg1 !== false) {
-                missDeg = missDeg1;
-                digital = 1;
-            }
-
-            if (missDeg !== false) {
-                //有效的拖拽角度
-                //计算偏移比例
-                missDeg = $this.degToRadian(missDeg);
-
-                var dist = digital * obj.distance * Math.cos(missDeg);
-                var offsetRate = $this.options.offsetRate || 1;  //如果是边，偏移比例应该是  1 ，如果是拐角，偏移比例应该是 Math.sqrt(2)/2
-                //console.log(missDeg1,missDeg2,obj.deg,offsetDeg,dist,digital);
-                return dist * offsetRate;
-            }
-        }
-        return false;
-
-    }
-
-
-    MouseGesture.prototype.calcOffsetInfo = function (end) {
-        var dis = this.calcOffset(end)
-        if (dis !== false) {
-            var obj = {
-                distance: dis
-            }
-            if (this.cache) {
-                obj["cache"] = this.cache;
-            }
-            return obj;
-        }
-        return false;
-    }
-
-    //角度转弧度
-    MouseGesture.prototype.degToRadian = function (deg) {
-        return deg * Math.PI / 180;
-    }
-
-    //弧度转角度
-    MouseGesture.prototype.RadianToDeg = function (radian) {
-        return radian * 180 / Math.PI;
-    }
-
-
-
-    //开始使用
-
-    var circle = document.getElementById("circle");
-
-    var ins = new MouseGesture({ wise: true });
-
-    window.addEventListener("mousedown", function (e) {
-        ins.setStart({
-            x: e.clientX,
-            y: e.clientY
+// 计算新的点坐标信息
+function newPoints(sa) {
+    let arrSa = [];
+    sa.map((item) => {
+        arrSa.push({
+            x: item.x,
+            y: item.y
         });
-        circle.style.left = e.clientX - 5 + "px";
-        circle.style.top = e.clientY - 5 + "px";
-    })
-    window.addEventListener("mousemove", function (e) {
-        if (!ins.startPoint) {
-            return;
-        }
-        var obj = ins.getDegInfo({
-            x: e.clientX,
-            y: e.clientY
-        });
-        if (obj) {
-            console.log(`角度为:${obj.deg};  x方向位移:${obj.missX};  y方向位移:${obj.missY} ;两点之间的距离为:${obj.distance}`);
+    });
+    let newArr = []
+    arrSa.map((item, index) => {
+        if (arrSa[index + 1] === undefined) {
+            newArr.push({
+                active: true,
+                highlight: true,
+                lines: [
+                    {
+                        x: arrSa[0].x,
+                        y: arrSa[0].y
+                    },
+                ],
+                x: item.x,
+                y: item.y,
+            })
         } else {
-            console.log("无效的移动");
+            newArr.push({
+                active: true,
+                highlight: true,
+                lines: [
+                    {
+                        x: arrSa[index + 1].x,
+                        y: arrSa[index + 1].y
+                    },
+                ],
+                x: item.x,
+                y: item.y,
+            })
         }
-    })
-    window.addEventListener("mouseup", function (e) {
-        ins.setEnd();
-    })
 
+    })
+    return newArr
 }
-
 
 const initFreehandRoiTool = (props) => {
     let pathArrX = [];
@@ -573,6 +364,19 @@ const initFreehandRoiTool = (props) => {
         this._endDrawing(element);
         pathArrX = []
         pathArrY = []
+
+        let cur = cornerstoneToolsHelp.diyGetData().filter((item) => item.color !== undefined)[0] || [];
+        if (cur) {
+            let sa = [];
+            cur.handles.points.map((item) => {
+                sa.push({
+                    x: item.x,
+                    y: item.y
+                })
+            })
+            cur.handles.points = newPoints(sa)
+        }
+
         cornerstone.updateImage(element);
     }
     // cornerstoneTools.FreehandRoiTool.prototype._drawingMouseDownCallback = function (evt) {
@@ -609,7 +413,6 @@ const initFreehandRoiTool = (props) => {
         var interactionType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'mouse';
         var element = evt.detail.element;
         var toolState = cornerstoneTools.getToolState(element, this.name);
-        console.log(evt, "evtevtevt")
         toolState.data.map((item) => {
             if (item.uuid === toolData.uuid) {
                 // toolData.color = toolData.color === undefined ? '#ff00ff' : undefined;
@@ -691,6 +494,7 @@ const initFreehandRoiTool = (props) => {
             var lastHandlePlaced = config.currentHandle;
             this._endDrawing(element, lastHandlePlaced, evt);
         }
+
         evt.stopImmediatePropagation();
         evt.stopPropagation();
         evt.preventDefault();
@@ -703,7 +507,7 @@ const initFreehandRoiTool = (props) => {
             buttons = eventData.buttons;
 
 
-        if (buttons === 2) {
+        if (buttons === 2) {// 右键控制整体移动
             let toolState = cornerstoneTools.getToolState(element, this.name);
             let config = this.configuration;
             let data = toolState.data[config.currentTool];
@@ -786,7 +590,19 @@ const initFreehandRoiTool = (props) => {
         points[currentHandle].y = config.mouseLocation.handles.start.y;
 
 
-        if (sessionStorage.getItem('togetherModel')) {
+
+
+
+        handleIndex = this._getPrevHandleIndex(currentHandle, points);
+
+        if (currentHandle >= 0) {
+            var lastLineIndex = points[handleIndex].lines.length - 1;
+            var lastLine = points[handleIndex].lines[lastLineIndex];
+            lastLine.x = config.mouseLocation.handles.start.x;
+            lastLine.y = config.mouseLocation.handles.start.y;
+        } // Update the image
+
+        if (sessionStorage.getItem('togetherModel')) {// 多个点一起移动
             let changedX = ''
             let changedY = ''
             if (pathArrX.length <= 2) {
@@ -819,7 +635,7 @@ const initFreehandRoiTool = (props) => {
             let dY = Math.abs(pathArrY[0] - pathArrY[1])
             let sx = 11;
             let length = 0;
-            if (11 % 2 !== 0) {
+            if (sx % 2 !== 0) {
                 length = Math.floor(sx / 2)
             } else {
                 length = sx / 2
@@ -829,8 +645,10 @@ const initFreehandRoiTool = (props) => {
                     for (let i = 1; i <= length; i++) {
                         let pointsIndex1 = points[currentHandle + i] ? (currentHandle + i) : (currentHandle + i - points.length);
                         let pointsIndex2 = points[currentHandle - i] ? (currentHandle - i) : (currentHandle - i + points.length);
-                        points[pointsIndex1].x += dX * (length - i + 1) / 10;
-                        points[pointsIndex2].x += dX * (length - i + 1) / 10;
+                        points[pointsIndex1].x += dX * (length - i + 1) / 5;
+                        points[pointsIndex2].x += dX * (length - i + 1) / 5;
+                        points[pointsIndex1]['isMove'] = true;
+                        points[pointsIndex2]['isMove'] = true;
                     }
 
                 }
@@ -838,38 +656,34 @@ const initFreehandRoiTool = (props) => {
                     for (let i = 1; i <= length; i++) {
                         let pointsIndex1 = points[currentHandle + i] ? (currentHandle + i) : (currentHandle + i - points.length);
                         let pointsIndex2 = points[currentHandle - i] ? (currentHandle - i) : (currentHandle - i + points.length);
-                        points[pointsIndex1].x -= dX * (length - i + 1) / 10;
-                        points[pointsIndex2].x -= dX * (length - i + 1) / 10;
+                        points[pointsIndex1].x -= dX * (length - i + 1) / 5;
+                        points[pointsIndex2].x -= dX * (length - i + 1) / 5;
+                        points[pointsIndex1]['isMove'] = true;
+                        points[pointsIndex2]['isMove'] = true;
                     }
                 }
                 if (changedY === 'add') {
                     for (let i = 1; i <= length; i++) {
                         let pointsIndex1 = points[currentHandle + i] ? (currentHandle + i) : (currentHandle + i - points.length);
                         let pointsIndex2 = points[currentHandle - i] ? (currentHandle - i) : (currentHandle - i + points.length);
-                        points[pointsIndex1].y += dY * (length - i + 1) / 10;
-                        points[pointsIndex2].y += dY * (length - i + 1) / 10;
+                        points[pointsIndex1].y += dY * (length - i + 1) / 5;
+                        points[pointsIndex2].y += dY * (length - i + 1) / 5;
+                        points[pointsIndex1]['isMove'] = true;
+                        points[pointsIndex2]['isMove'] = true;
                     }
                 }
                 if (changedY === 'reduce') {
                     for (let i = 1; i <= length; i++) {
                         let pointsIndex1 = points[currentHandle + i] ? (currentHandle + i) : (currentHandle + i - points.length);
                         let pointsIndex2 = points[currentHandle - i] ? (currentHandle - i) : (currentHandle - i + points.length);
-                        points[pointsIndex1].y -= dY * (length - i + 1) / 10;
-                        points[pointsIndex2].y -= dY * (length - i + 1) / 10;
+                        points[pointsIndex1].y -= dY * (length - i + 1) / 5;
+                        points[pointsIndex2].y -= dY * (length - i + 1) / 5;
+                        points[pointsIndex1]['isMove'] = true;
+                        points[pointsIndex2]['isMove'] = true;
                     }
                 }
             }
         }
-
-
-        handleIndex = this._getPrevHandleIndex(currentHandle, points);
-
-        if (currentHandle >= 0) {
-            var lastLineIndex = points[handleIndex].lines.length - 1;
-            var lastLine = points[handleIndex].lines[lastLineIndex];
-            lastLine.x = config.mouseLocation.handles.start.x;
-            lastLine.y = config.mouseLocation.handles.start.y;
-        } // Update the image
 
         cornerstone.updateImage(element);
 
@@ -932,7 +746,6 @@ const initFreehandRoiTool = (props) => {
                 innerData2.push(item)//副图内部的点（不需要）
             }
         })
-        console.log(innerData1, innerData2)
         if (innerData1.length === 0 || innerData2.length === 0) {
             cornerstoneTools.removeToolState(
                 element,
@@ -1067,84 +880,8 @@ const initFreehandRoiTool = (props) => {
             }
         }
 
-        let arrSa = [];
-        sa.map((item) => {
-            arrSa.push({
-                x: item.x,
-                y: item.y
-            });
-        });
-        let newArr = []
-        arrSa.map((item, index) => {
-            if (arrSa[index + 1] === undefined) {
-                newArr.push({
-                    active: true,
-                    highlight: true,
-                    lines: [
-                        {
-                            x: arrSa[0].x,
-                            y: arrSa[0].y
-                        },
-                    ],
-                    x: item.x,
-                    y: item.y,
-                })
-            } else {
-                newArr.push({
-                    active: true,
-                    highlight: true,
-                    lines: [
-                        {
-                            x: arrSa[index + 1].x,
-                            y: arrSa[index + 1].y
-                        },
-                    ],
-                    x: item.x,
-                    y: item.y,
-                })
-            }
+        optData.handles.points = newPoints(sa);
 
-        })
-        optData.handles.points = newArr;
-        // var newOptData = JSON.parse(JSON.stringify(optData));
-        // alldata.map((item) => {
-        //     if(item.color!==undefined){
-        //         cornerstoneTools.removeToolState(
-        //             element,
-        //             'FreehandRoi',
-        //             item
-        //         );
-        //         cornerstoneTools.removeToolState(
-        //             element,
-        //             'FreehandRoi',
-        //             data
-        //         );
-
-        //     }
-
-        // });
-        // cornerstone.updateImage(element);
-
-        // cornerstone.updateImage(element);
-        // alldata.map((item) => {
-        //     if (item.color !== undefined) {
-        //         cornerstoneTools.removeToolState(
-        //             element,
-        //             'FreehandRoi',
-        //             item
-        //         );
-        //         cornerstoneTools.removeToolState(
-        //             element,
-        //             'FreehandRoi',
-        //             data
-        //         );
-
-        //     }
-
-        // });
-        // state.add(element, 'FreehandRoi', newOptData)
-        // optData.handles.points = newArr
-        ///////////////////////////
         cornerstoneTools.removeToolState(
             element,
             'FreehandRoi',
@@ -1334,63 +1071,8 @@ const initFreehandRoiTool = (props) => {
             }
         }
 
-        let arrSa = [];
-        sa.map((item) => {
-            arrSa.push({
-                x: item.x,
-                y: item.y
-            });
-        });
-        let newArr = []
-        arrSa.map((item, index) => {
-            if (arrSa[index + 1] === undefined) {
-                newArr.push({
-                    active: true,
-                    highlight: true,
-                    lines: [
-                        {
-                            x: arrSa[0].x,
-                            y: arrSa[0].y
-                        },
-                    ],
-                    x: item.x,
-                    y: item.y,
-                })
-            } else {
-                newArr.push({
-                    active: true,
-                    highlight: true,
-                    lines: [
-                        {
-                            x: arrSa[index + 1].x,
-                            y: arrSa[index + 1].y
-                        },
-                    ],
-                    x: item.x,
-                    y: item.y,
-                })
-            }
+        optData.handles.points = newPoints(sa);
 
-        })
-        optData.handles.points = newArr;
-        // var newOptData = JSON.parse(JSON.stringify(optData));
-        // alldata.map((item) => {
-        //     cornerstoneTools.removeToolState(
-        //         element,
-        //         'FreehandRoi',
-        //         item
-        //     );
-        // });
-        // cornerstone.updateImage(element);
-        // state.add(element, 'FreehandRoi', newOptData)
-        // cornerstone.updateImage(element);
-        // alldata.map((item) => {
-        //     cornerstoneTools.removeToolState(
-        //         element,
-        //         'FreehandRoi',
-        //         item
-        //     );
-        // });
         cornerstoneTools.removeToolState(
             element,
             'FreehandRoi',
@@ -1446,20 +1128,3 @@ const initFreehandRoiTool = (props) => {
 }
 
 export default initFreehandRoiTool
-// var a = JSON.parse('{"visible":true,"active":false,"invalidated":true,"handles":{"points":[{"x":1327.6456599286566,"y":577.1414982164091,"highlight":true,"active":true,"lines":[{"x":692.0594530321048,"y":1493.9928656361476}]},{"x":692.0594530321048,"y":1493.9928656361476,"highlight":true,"active":true,"lines":[{"x":1126.741973840666,"y":2078.4399524375744}]},{"x":1126.741973840666,"y":2078.4399524375744,"highlight":true,"active":true,"lines":[{"x":1893.8287752675387,"y":2107.662306777646}]},{"x":1893.8287752675387,"y":2107.662306777646,"highlight":true,"active":true,"lines":[{"x":1897.4815695600478,"y":2104.009512485137}]},{"x":1897.4815695600478,"y":2104.009512485137,"highlight":true,"active":true,"lines":[{"x":2010.7181926278245,"y":1238.2972651605235}]},{"x":2010.7181926278245,"y":1238.2972651605235,"highlight":true,"active":true,"lines":[{"x":1807.126365054602,"y":1086.349453978159}]},{"x":1807.126365054602,"y":1086.349453978159,"highlight":true,"active":true,"lines":[{"x":2127.6076099881097,"y":745.1700356718194}]},{"x":2127.6076099881097,"y":745.1700356718194,"highlight":true,"active":true,"lines":[{"x":1327.6456599286566,"y":577.1414982164091,"highlight":true,"active":true,"lines":[{"x":692.0594530321048,"y":1493.9928656361476}]}]}],"textBox":{"active":false,"hasMoved":false,"movesIndependently":false,"drawnIndependently":true,"allowedOutsideImage":true,"hasBoundingBox":true,"x":2127.6076099881097,"y":1342.4019024970275,"boundingBox":{"width":48.34228515625,"height":45,"left":499.193439971588,"top":352.5767274892367}},"invalidHandlePlacement":false},"uuid":"3ccb7e50-009a-48f1-995a-72fbc4a159a6","canComplete":false,"highlight":false,"polyBoundingBox":{"left":692.0594530321048,"top":577.1414982164091,"width":1435.548156956005,"height":1530.5208085612367},"meanStdDev":{"count":1321687,"mean":2175.2237095469654,"variance":395152.4595436761,"stdDev":628.6115330978872},"area":24330.682622047614,"location":"35w3","locationCode":"35w3","frameIndex":0,"imagePath":"20220413174701.124406_20220413174701124406_20220413174701.124406.10_0","lesionNamingNumber":0,"measurementNumber":0,"patientId":"","seriesInstanceUid":"20220413174701124406","sopInstanceUid":"20220413174701.124406.10","studyInstanceUid":"20220413174701.124406","timepointId":"TimepointId","toolType":"FreehandRoi","_id":"3ccb7e50-009a-48f1-995a-72fbc4a159a6"}')
-// var dom = document.querySelector('.cornerstone-element')
-// cornerstoneToolsHelp.setToolActive('FreehandRoi', { mouseButtonMask: 1, });
-// var state = cornerstoneToolsHelp.getElementToolStateManager(dom)
-// state.add(dom , 'FreehandRoi', a)
-// cornerstoneHelp.updateImage(dom)
-
-// cornerstoneToolsHelp.getToolForElement(dom,'FreehandScissors').setActiveStrategy('ERASE_OUTSIDE')
-
-
-// var dom = document.querySelector('.cornerstone-element')
-// cornerstoneToolsHelp.setToolActive('FreehandRoi', { mouseButtonMask: 1, });
-// var state = cornerstoneToolsHelp.getElementToolStateManager(dom)
-// var data = state.get(dom, 'FreehandRoi')?state.get(dom, 'FreehandRoi').data[0]:[]
-// data.handles.points[0].x = 300;
-// data.handles.points[0].y = 300;
-// cornerstoneHelp.updateImage(dom)
